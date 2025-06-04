@@ -57,6 +57,14 @@ int mutex_lock(const char* name, int client_pid) {
 
     pthread_mutex_lock(&global_mutex_lock);
 
+    // Nếu có mutex nào đang bị khoá và không phải của client này, không cho khoá mutex khác
+    for (int i = 0; i < mutex_count; i++) {
+        if (mutexes[i].is_locked && mutexes[i].owner_pid != client_pid) {
+            pthread_mutex_unlock(&global_mutex_lock);
+            return -3; // Đã có mutex khác bị khoá bởi client khác
+        }
+    }
+
     for (int i = 0; i < mutex_count; i++) {
         if (strcmp(mutexes[i].name, name) == 0) {
             if (mutexes[i].is_locked) {
